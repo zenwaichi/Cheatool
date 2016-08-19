@@ -1,2 +1,2 @@
 # Cheatool
-A simple C# library with almost everything you need for hacktools development
+A simple C# lib with almost everything you need for Hack-Tools development

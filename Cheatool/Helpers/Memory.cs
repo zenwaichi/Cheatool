@@ -38,7 +38,7 @@ namespace Cheatool.Helpers
             PROCESS_SET_INFORMATION = (0x0200),
             PROCESS_QUERY_INFORMATION = (0x0400)
         }
-        
+
         [DllImport("kernel32.dll")]
         public static extern int CloseHandle(IntPtr objectHandle);
 
@@ -166,7 +166,7 @@ namespace Cheatool.Helpers
             {
                 byte[] buffer = new byte[4];
                 foreach (int offset in offsets)
-                    address = ReadInteger((IntPtr)address) + offset;
+                    address = ReadValue<int>((IntPtr)address) + offset;
             }
 
             return (IntPtr)address;
@@ -266,126 +266,87 @@ namespace Cheatool.Helpers
             if (!ReadProcessMemory(processHandle, address, buffer, (uint)size, ref read) ||
                 read != size)
                 throw new AccessViolationException();
-        }        
+        }
 
         /// <summary>
-        /// Reads boolean (true or false) value at the address
+        /// Read any type corresponding to the address
         /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="process"></param>
         /// <param name="address"></param>
+        /// <param name="type"></param>
         /// <returns></returns>
-        public bool ReadBoolean(IntPtr address)
+        public T ReadValue<T>(IntPtr address)
         {
-            byte[] buffer = new byte[sizeof(bool)];
-            ReadMemory(address, buffer, sizeof(bool));
-            return BitConverter.ToBoolean(buffer, 0);
-        }
+            try
+            {
+                switch (Type.GetTypeCode(typeof(T)))
+                {
+                    case TypeCode.Boolean:
+                        byte[] booleanBuffer = new byte[sizeof(bool)];
+                        ReadMemory(address, booleanBuffer, sizeof(bool));
+                        object booleanValue = BitConverter.ToBoolean(booleanBuffer, 0);
+                        return (T)booleanValue;
 
-        /// <summary>
-        /// Reads 16 bit signed integer at the address
-        /// </summary>
-        /// <param name="address"></param>
-        /// <returns></returns>
-        public short ReadShort(IntPtr address)
-        {
-            byte[] buffer = new byte[sizeof(short)];
-            ReadMemory(address, buffer, sizeof(short));
-            return BitConverter.ToInt16(buffer, 0);
-        }
+                    case TypeCode.UInt16:
+                        byte[] ushortBuffer = new byte[sizeof(ushort)];
+                        ReadMemory(address, ushortBuffer, sizeof(ushort));
+                        object ushortValue = BitConverter.ToUInt16(ushortBuffer, 0);
+                        return (T)ushortValue;
 
-        /// <summary>
-        /// Reads 16 bit unsigned integer at the address
-        /// </summary>
-        /// <param name="address"></param>
-        /// <returns></returns>
-        public ushort ReadUShort(IntPtr address)
-        {
-            byte[] buffer = new byte[sizeof(ushort)];
-            ReadMemory(address, buffer, sizeof(ushort));
-            return BitConverter.ToUInt16(buffer, 0);
-        }
+                    case TypeCode.Int16:
+                        byte[] shortBuffer = new byte[sizeof(short)];
+                        ReadMemory(address, shortBuffer, sizeof(short));
+                        object shortValue = BitConverter.ToInt16(shortBuffer, 0);
+                        return (T)shortValue;
 
-        /// <summary>
-        /// Reads 32 bit signed integer at the address
-        /// </summary>
-        /// <param name="address">Memory address</param>
-        /// <returns></returns>
-        public int ReadInteger(IntPtr address)
-        {
-            byte[] buffer = new byte[sizeof(int)];
-            ReadMemory(address, buffer, sizeof(int));
-            return BitConverter.ToInt32(buffer, 0);
-        }
+                    case TypeCode.UInt32:
+                        byte[] uintBuffer = new byte[sizeof(uint)];
+                        ReadMemory(address, uintBuffer, sizeof(uint));
+                        object uintValue = BitConverter.ToUInt32(uintBuffer, 0);
+                        return (T)uintValue;
 
-        /// <summary>
-        /// Reads 32 bit unsigned integer at the address
-        /// </summary>
-        /// <param name="address">Memory address</param>
-        /// <returns></returns>
-        public uint ReadUInteger(IntPtr address)
-        {
-            byte[] buffer = new byte[4];
-            ReadMemory(address, buffer, 4);
-            return BitConverter.ToUInt32(buffer, 0);
-        }
+                    case TypeCode.Int32:
+                        byte[] intBuffer = new byte[sizeof(int)];
+                        ReadMemory(address, intBuffer, sizeof(int));
+                        object intValue = BitConverter.ToInt32(intBuffer, 0);
+                        return (T)intValue;
 
-        /// <summary>
-        /// Reads 64 bit signed integer at the address
-        /// </summary>
-        /// <param name="address"></param>
-        /// <returns></returns>
-        public long ReadLong(IntPtr address)
-        {
-            byte[] buffer = new byte[sizeof(long)];
-            ReadMemory(address, buffer, sizeof(long));
-            return BitConverter.ToInt64(buffer, 0);
-        }
+                    case TypeCode.UInt64:
+                        byte[] ulongBuffer = new byte[sizeof(ulong)];
+                        ReadMemory(address, ulongBuffer, sizeof(ulong));
+                        object ulongValue = BitConverter.ToUInt64(ulongBuffer, 0);
+                        return (T)ulongValue;
 
-        /// <summary>
-        /// Reads 64 bit unsigned integer at the address
-        /// </summary>
-        /// <param name="address"></param>
-        /// <returns></returns>
-        public ulong ReadULong(IntPtr address)
-        {
-            byte[] buffer = new byte[sizeof(ulong)];
-            ReadMemory(address, buffer, sizeof(ulong));
-            return BitConverter.ToUInt64(buffer, 0);
-        }
+                    case TypeCode.Int64:
+                        byte[] longBuffer = new byte[sizeof(long)];
+                        ReadMemory(address, longBuffer, sizeof(long));
+                        object longValue = BitConverter.ToInt64(longBuffer, 0);
+                        return (T)longValue;
 
-        /// <summary>
-        /// Reads single precision value at the address
-        /// </summary>
-        /// <param name="address">Memory address</param>
-        /// <returns></returns>
-        public float ReadFloat(IntPtr address)
-        {
-            byte[] buffer = new byte[4];
-            ReadMemory(address, buffer, 4);
-            return BitConverter.ToSingle(buffer, 0);
-        }
+                    case TypeCode.Double:
+                        byte[] doubleBuffer = new byte[8];
+                        ReadMemory(address, doubleBuffer, 8);
+                        object doubleValue = BitConverter.ToDouble(doubleBuffer, 0);
+                        return (T)doubleValue;
 
-        /// <summary>
-        /// Reads double precision value at the address
-        /// </summary>
-        /// <param name="address">Memory address</param>
-        /// <returns></returns>
-        public double ReadDouble(IntPtr address)
-        {
-            byte[] buffer = new byte[8];
-            ReadMemory(address, buffer, 8);
-            return BitConverter.ToDouble(buffer, 0);
-        }
+                    case TypeCode.Decimal:
+                        byte[] decimalBuffer = new byte[sizeof(decimal)];
+                        ReadMemory(address, decimalBuffer, sizeof(decimal));
+                        object decimalValue = BitConverter.ToInt32(decimalBuffer, 0);
+                        return (T)decimalValue;
 
-        /// <summary>
-        /// Reads decimal number value at the address
-        /// </summary>
-        /// <param name="address"></param>
-        /// <returns></returns>
-        public decimal ReadDecimal(IntPtr address)
-        {
-            byte[] buffer = new byte[sizeof(decimal)];
-            ReadMemory(address, buffer, sizeof(decimal));
-            return BitConverter.ToInt32(buffer, 0);
+                    default:
+                        byte[] floatBuffer = new byte[4];
+                        ReadMemory(address, floatBuffer, 4);
+                        object floatValue = BitConverter.ToSingle(floatBuffer, 0);
+                        return (T)floatValue;
+                }
+            }
+            catch (Exception e)
+            {
+                throw new Exception("You're trying to access to a private/damaged memory", e);
+            }
         }
 
         #endregion
@@ -398,7 +359,7 @@ namespace Cheatool.Helpers
         /// <param name="address">Memory address</param>
         /// <param name="buffer">Buffer</param>
         /// <param name="size">Size in bytes</param>
-        public void WriteMemory(IntPtr address, byte[] buffer, int size)
+        public void ReplaceMemory(IntPtr address, byte[] buffer, int size)
         {
             if (isDisposed)
                 throw new ObjectDisposedException("Memory");
@@ -416,118 +377,85 @@ namespace Cheatool.Helpers
         }
 
         /// <summary>
-        /// Writes boolean (true or false) value at the address
+        /// Replaces a value corresponding to the address
         /// </summary>
+        /// <typeparam name="T"></typeparam>
         /// <param name="address"></param>
-        /// <param name="value"></param>
-        public void WriteBoolean(IntPtr address, bool value)
+        /// <param name="replace"></param>
+        public void ReplaceValue<T>(IntPtr address, T replacement)
         {
-            byte[] buffer = BitConverter.GetBytes(value);
-            WriteMemory(address, buffer, sizeof(bool));
-        }
+            object replacementValue = replacement;
 
-        /// <summary>
-        /// Writes 16 bit signed integer at the address
-        /// </summary>
-        /// <param name="address"></param>
-        /// <param name="value"></param>
-        public void WriteShort(IntPtr address, short value)
-        {
-            byte[] buffer = BitConverter.GetBytes(value);
-            WriteMemory(address, buffer, sizeof(short));
-        }
+            try
+            {
+                switch (Type.GetTypeCode(typeof(T)))
+                {
+                    case TypeCode.Boolean:
+                        bool booleanValue = (bool)replacementValue;
+                        byte[] booleanBuffer = BitConverter.GetBytes(booleanValue);
+                        ReplaceMemory(address, booleanBuffer, sizeof(bool));
+                        break;
 
-        /// <summary>
-        /// Writes 16 bit unsigned integer at the address
-        /// </summary>
-        /// <param name="address"></param>
-        /// <param name="value"></param>
-        public void WriteUShort(IntPtr address, ushort value)
-        {
-            byte[] buffer = BitConverter.GetBytes(value);
-            WriteMemory(address, buffer, sizeof(ushort));
-        }
+                    case TypeCode.UInt16:
+                        ushort ushortValue = (ushort)replacementValue;
+                        byte[] ushortBuffer = BitConverter.GetBytes(ushortValue);
+                        ReplaceMemory(address, ushortBuffer, sizeof(ushort));
+                        break;
 
-        /// <summary>
-        /// Writes 32 bit signed integer at the address
-        /// </summary>
-        /// <param name="address">Memory address</param>
-        /// <param name="value">Value</param>
-        /// <returns></returns>
-        public void WriteInteger(IntPtr address, int value)
-        {
-            byte[] buffer = BitConverter.GetBytes(value);
-            WriteMemory(address, buffer, sizeof(int));
-        }
+                    case TypeCode.Int16:
+                        short shortValue = (short)replacementValue;
+                        byte[] shortBuffer = BitConverter.GetBytes(shortValue);
+                        ReplaceMemory(address, shortBuffer, sizeof(short));
+                        break;
 
-        /// <summary>
-        /// Writes 32 bit unsigned integer at the address
-        /// </summary>
-        /// <param name="address">Memory address</param>
-        /// <param name="value">Value</param>
-        /// <returns></returns>
-        public void WriteUInteger(IntPtr address, uint value)
-        {
-            byte[] buffer = BitConverter.GetBytes(value);
-            WriteMemory(address, buffer, sizeof(uint));
-        }
+                    case TypeCode.UInt32:
+                        uint uintValue = uint.Parse(replacement.ToString());
+                        byte[] uintBuffer = BitConverter.GetBytes(uintValue);
+                        ReplaceMemory(address, uintBuffer, sizeof(uint));
+                        break;
 
-        /// <summary>
-        /// Writes 64 bits signed integer at the address
-        /// </summary>
-        /// <param name="address"></param>
-        /// <param name="value"></param>
-        public void WriteLong(IntPtr address, long value)
-        {
-            byte[] buffer = BitConverter.GetBytes(value);
-            WriteMemory(address, buffer, sizeof(long));
-        }
+                    case TypeCode.Int32:
+                        int intValue = int.Parse(replacement.ToString());
+                        byte[] intBuffer = BitConverter.GetBytes(intValue);
+                        ReplaceMemory(address, intBuffer, sizeof(int));
+                        break;
 
-        /// <summary>
-        /// Writes 64 bits unsigned integer at the address
-        /// </summary>
-        /// <param name="address"></param>
-        /// <param name="value"></param>
-        public void WriteULong(IntPtr address, ulong value)
-        {
-            byte[] buffer = BitConverter.GetBytes(value);
-            WriteMemory(address, buffer, sizeof(ulong));
-        }
+                    case TypeCode.UInt64:
+                        ulong ulongValue = ulong.Parse(replacement.ToString());
+                        byte[] ulongBuffer = BitConverter.GetBytes(ulongValue);
+                        ReplaceMemory(address, ulongBuffer, sizeof(ulong));
+                        break;
 
-        /// <summary>
-        /// Writes single precision value at the address
-        /// </summary>
-        /// <param name="address">Memory address</param>
-        /// <param name="value">Value</param>
-        /// <returns></returns>
-        public void WriteFloat(IntPtr address, float value)
-        {
-            byte[] buffer = BitConverter.GetBytes(value);
-            WriteMemory(address, buffer, sizeof(float));
-        }
+                    case TypeCode.Int64:
+                        long longValue = long.Parse(replacement.ToString());
+                        byte[] longBuffer = BitConverter.GetBytes(longValue);
+                        ReplaceMemory(address, longBuffer, sizeof(long));
+                        break;
 
-        /// <summary>
-        /// Writes double precision value at the address
-        /// </summary>
-        /// <param name="address">Memory address</param>
-        /// <param name="value">Value</param>
-        /// <returns></returns>
-        public void WriteDouble(IntPtr address, double value)
-        {
-            byte[] buffer = BitConverter.GetBytes(value);
-            WriteMemory(address, buffer, sizeof(double));
-        }
+                    case TypeCode.Double:
+                        double doubleValue = double.Parse(replacement.ToString());
+                        byte[] doubleBuffer = BitConverter.GetBytes(doubleValue);
+                        ReplaceMemory(address, doubleBuffer, sizeof(double));
+                        break;
 
-        /// <summary>
-        /// Writes decimal number value at the address
-        /// </summary>
-        /// <param name="address"></param>
-        /// <param name="value"></param>
-        public void WriteDecimal(IntPtr address, decimal value)
-        {
-            byte[] buffer = decimal.GetBits(value).SelectMany(x 
-                => BitConverter.GetBytes(x)).ToArray();
-            WriteMemory(address, buffer, sizeof(decimal));
+                    case TypeCode.Decimal:
+                        decimal decimalValue = decimal.Parse(replacement.ToString());
+                        byte[] decimalBuffer = decimal.GetBits(decimalValue).SelectMany(x
+                        => BitConverter.GetBytes(x)).ToArray();
+                        ReplaceMemory(address, decimalBuffer, sizeof(decimal));
+                        break;
+
+                    default:
+                        float floatValue = float.Parse(replacement.ToString());
+                        byte[] floatBuffer = BitConverter.GetBytes(floatValue);
+                        ReplaceMemory(address, floatBuffer, sizeof(float));
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                throw new Exception("You're trying to access to a private/damaged memory", e);
+            }
         }
 
         #endregion
@@ -586,7 +514,7 @@ namespace Cheatool.Helpers
             return IntPtr.Zero;
         }
 
-        public async Task<IntPtr[]> AoBScan(string pattern, uint baseAddress)
+        public async Task<IntPtr[]> AoBScan(string pattern, uint baseAddress, int lenght)
         {
             MemoryRegion = new List<MEMORY_BASIC_INFORMATION>();
             List<IntPtr> address = new List<IntPtr>();
@@ -601,7 +529,7 @@ namespace Cheatool.Helpers
                     for (int i = 0; i < MemoryRegion.Count; i++)
                     {
                         resultSig = await SigScan.AoBScan(process, baseAddress++,
-                            (int)MemoryRegion[i].RegionSize, pattern);
+                            lenght, pattern);
 
                         if (resultSig != IntPtr.Zero && !address.Contains(resultSig))
                             address.Add(resultSig);
@@ -628,7 +556,7 @@ namespace Cheatool.Helpers
 
             try
             {
-                return await Task.Run(()=>
+                return await Task.Run(() =>
                 {
                     foreach (var by in strPattern)
                         bPattern[(int)readp++] = byte.Parse(by, System.Globalization.NumberStyles.HexNumber);
@@ -652,6 +580,6 @@ namespace Cheatool.Helpers
             {
                 throw new Exception(e.ToString());
             }
-        }        
+        }
     }
 }

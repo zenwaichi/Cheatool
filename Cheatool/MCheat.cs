@@ -29,6 +29,7 @@ namespace Cheatool
             Process[] processList = Process.GetProcessesByName(processName);
             Process p = processList.OrderByDescending(process => process.PrivateMemorySize64).First();
             _memory = new Memory(p);
+            MProcess = p;
         }
 
         /// <summary>

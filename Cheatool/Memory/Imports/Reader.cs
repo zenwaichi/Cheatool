@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace Cheatool.Memory.Imports
@@ -24,5 +25,7 @@ namespace Cheatool.Memory.Imports
         [DllImport("KERNEL32.DLL", SetLastError = true)]
         public static extern bool ReadProcessMemory(
             IntPtr process, IntPtr address, byte[] buffer, uint size, ref uint read);
+
+        public List<MEMORY_BASIC_INFORMATION> MemoryRegion = new List<MEMORY_BASIC_INFORMATION>();
     }
 }

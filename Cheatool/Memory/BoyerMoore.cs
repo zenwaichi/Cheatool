@@ -16,9 +16,7 @@ namespace Cheatool.Memory
         public BoyerMoore(IntPtr processHandle)
         {
             _processHandle = processHandle;
-        }
-
-        private List<MEMORY_BASIC_INFORMATION> _memoryRegion = new List<MEMORY_BASIC_INFORMATION>();
+        }        
 
         private void MemInfo(bool writable)
         {
@@ -35,12 +33,12 @@ namespace Cheatool.Memory
                 if (writable)
                 {
                     if ((memInfo.State & 0x1000) != 0 && (memInfo.Protect & 0xCC) != 0)
-                        _memoryRegion.Add(memInfo);
+                        MemoryRegion.Add(memInfo);
                 }
                 else
                 {
                     if ((memInfo.State & 0x1000) != 0)
-                        _memoryRegion.Add(memInfo);
+                        MemoryRegion.Add(memInfo);
                 }
 
                 Addy = new IntPtr(memInfo.BaseAddress.ToInt32() + (int)memInfo.RegionSize);
@@ -87,7 +85,9 @@ namespace Cheatool.Memory
                         {
                             if (memoryBrick.Length <= offSet + pattern.Length
                                 || (byte)Convert.ToInt32(aob[bytesPos[i]], 16)
-                                != memoryBrick[offSet + bytesPos[i]]) break;
+                                != memoryBrick[offSet - bytesPos[0] + bytesPos[i]]) break;
+
+                            Console.WriteLine($"Pattern: {Convert.ToInt32(aob[bytesPos[i]], 16).ToString("x2")} | Brick: {memoryBrick[offSet + bytesPos[i]].ToString("x2")} | BytePosition: {bytesPos[i]} | ByteCount: {bytesPos.Count}");
 
                             if (i == bytesPos.Count - 1)
                             {
@@ -99,7 +99,6 @@ namespace Cheatool.Memory
                         }
                     else
                         addresses.Add(new IntPtr((int)baseAddress + (offSet - bytesPos[0])));
-
                     offSet++;
                 }
             else
@@ -202,15 +201,15 @@ namespace Cheatool.Memory
 
             List<IntPtr> addresses = new List<IntPtr>();
 
-            for (int i = 0; i < _memoryRegion.Count; i++)
+            for (int i = 0; i < MemoryRegion.Count; i++)
             {
                 uint read = 0;
-                byte[] wholeMemory = new byte[_memoryRegion[i].RegionSize];
+                byte[] wholeMemory = new byte[MemoryRegion[i].RegionSize];
 
-                ReadProcessMemory(_processHandle, _memoryRegion[i].BaseAddress, wholeMemory,
-                    _memoryRegion[i].RegionSize, ref read);
+                ReadProcessMemory(_processHandle, MemoryRegion[i].BaseAddress, wholeMemory,
+                    MemoryRegion[i].RegionSize, ref read);
 
-                BoyerAlgo(_memoryRegion[i].BaseAddress, wholeMemory, buff, ref addresses);
+                BoyerAlgo(MemoryRegion[i].BaseAddress, wholeMemory, buff, ref addresses);
             }
             return addresses.ToArray();
         }
@@ -221,15 +220,15 @@ namespace Cheatool.Memory
 
             List<IntPtr> addresses = new List<IntPtr>();
 
-            for (int i = 0; i < _memoryRegion.Count; i++)
+            for (int i = 0; i < MemoryRegion.Count; i++)
             {
                 uint read = 0;
-                byte[] wholeMemory = new byte[_memoryRegion[i].RegionSize];
+                byte[] wholeMemory = new byte[MemoryRegion[i].RegionSize];
 
-                ReadProcessMemory(_processHandle, _memoryRegion[i].BaseAddress, wholeMemory,
-                    _memoryRegion[i].RegionSize, ref read);
+                ReadProcessMemory(_processHandle, MemoryRegion[i].BaseAddress, wholeMemory,
+                    MemoryRegion[i].RegionSize, ref read);
 
-                BoyerAlgo(_memoryRegion[i].BaseAddress, wholeMemory, pattern, ref addresses);
+                BoyerAlgo(MemoryRegion[i].BaseAddress, wholeMemory, pattern, ref addresses);
             }
             return addresses.ToArray();
         }

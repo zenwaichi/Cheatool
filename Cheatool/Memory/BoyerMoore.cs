@@ -85,7 +85,7 @@ namespace Cheatool.Memory
                         {
                             if (memoryBrick.Length <= offSet + pattern.Length
                                 || (byte)Convert.ToInt32(aob[bytesPos[i]], 16)
-                                != memoryBrick[offSet - bytesPos[0] + bytesPos[i]]) break;
+                                != memoryBrick[(offSet -  bytesPos[0]) + bytesPos[i]]) break;
 
                             if (i == bytesPos.Count - 1)
                                 if (aob[0] == "??")

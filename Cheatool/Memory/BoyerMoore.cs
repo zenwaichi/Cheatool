@@ -47,7 +47,7 @@ namespace Cheatool.Memory
             }
         }
 
-        private void Scan(IntPtr baseAddress, byte[] memoryBrick, byte[] pattern, ref List<IntPtr> addresses)
+        private void BoyerAlgo(IntPtr baseAddress, byte[] memoryBrick, byte[] pattern, ref List<IntPtr> addresses)
         {
             int offSet = 0;
             while ((offSet = Array.IndexOf(memoryBrick, pattern[0], offSet)) != -1)
@@ -69,18 +69,53 @@ namespace Cheatool.Memory
             }
         }
 
-        private void Scan(IntPtr baseAddress, byte[] memoryBrick, string pattern, ref List<IntPtr> addresses)
+        private void BoyerAlgo(IntPtr baseAddress, byte[] memoryBrick, string pattern, ref List<IntPtr> addresses)
         {
-            //Here's the WildCard scan, currently i've something in hands but it breaks when the WildCards
-            //start in the beginning of the pattern. Dont worry, i'm working hard to fix this ;)
+            int offSet = 0;
+            string[] aob = pattern.Split(' ');
+            List<int> bytesPos = new List<int>();
+
+            for (int i = 0; i < aob.Length; i++)
+                if (aob[i] != "??")
+                    bytesPos.Add(i);
+
+            if (bytesPos.Count != 0)
+                while ((offSet = Array.IndexOf(memoryBrick, (byte)Convert.ToInt32(aob[bytesPos[0]], 16), offSet)) != -1)
+                {
+                    if (bytesPos.Count > 1)
+                        for (int i = 1; i < bytesPos.Count; i++)
+                        {
+                            if (memoryBrick.Length <= offSet + pattern.Length
+                                || (byte)Convert.ToInt32(aob[bytesPos[i]], 16)
+                                != memoryBrick[offSet + bytesPos[i]]) break;
+
+                            if (i == bytesPos.Count - 1)
+                            {
+                                if (aob[0] == "??")
+                                    addresses.Add(new IntPtr((int)baseAddress + (offSet - bytesPos[0])));
+                                else addresses.Add(new IntPtr((int)baseAddress + offSet));
+                                break;
+                            }
+                        }
+                    else
+                        addresses.Add(new IntPtr((int)baseAddress + (offSet - bytesPos[0])));
+
+                    offSet++;
+                }
+            else
+                for (int i = 0; i < memoryBrick.Length; i++)
+                    addresses.Add(new IntPtr((int)baseAddress + i));
         }
 
         public async Task<IntPtr[]> AoByte(string pattern, bool writable = true)
         {
-            byte[] buff = pattern.Split(' ').Select(by =>
-            (byte)Convert.ToInt32(by.ToUpper(), 16)).ToArray();
-
-            return await Task.Run(() => { return GeneralScan(buff, writable); });
+            if (!pattern.Contains("?"))
+            {
+                byte[] buff = pattern.Split(' ').Select(by =>
+                (byte)Convert.ToInt32(by, 16)).ToArray();
+                return await Task.Run(() => { return GeneralScan(buff, writable); });
+            }
+            else return await Task.Run(() => { return WCScan(pattern, writable); });
         }
 
         public async Task<IntPtr[]> Text(string value, bool writable = true)
@@ -175,7 +210,26 @@ namespace Cheatool.Memory
                 ReadProcessMemory(_processHandle, _memoryRegion[i].BaseAddress, wholeMemory,
                     _memoryRegion[i].RegionSize, ref read);
 
-                Scan(_memoryRegion[i].BaseAddress, wholeMemory, buff, ref addresses);
+                BoyerAlgo(_memoryRegion[i].BaseAddress, wholeMemory, buff, ref addresses);
+            }
+            return addresses.ToArray();
+        }
+
+        private IntPtr[] WCScan(string pattern, bool writable)
+        {
+            MemInfo(writable);
+
+            List<IntPtr> addresses = new List<IntPtr>();
+
+            for (int i = 0; i < _memoryRegion.Count; i++)
+            {
+                uint read = 0;
+                byte[] wholeMemory = new byte[_memoryRegion[i].RegionSize];
+
+                ReadProcessMemory(_processHandle, _memoryRegion[i].BaseAddress, wholeMemory,
+                    _memoryRegion[i].RegionSize, ref read);
+
+                BoyerAlgo(_memoryRegion[i].BaseAddress, wholeMemory, pattern, ref addresses);
             }
             return addresses.ToArray();
         }

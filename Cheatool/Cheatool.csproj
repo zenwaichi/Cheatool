@@ -44,12 +44,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MCheat.cs" />
-    <Compile Include="Helpers\Memory.cs" />
+    <Compile Include="Cheatbox.cs" />
+    <Compile Include="Memory\BoyerMoore.cs" />
+    <Compile Include="Memory\Editor.cs" />
+    <Compile Include="Memory\Imports\Manager.cs" />
+    <Compile Include="Memory\Imports\Reader.cs" />
+    <Compile Include="Memory\Inspector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="EventArgs\ReplaceValueEventArgs.cs" />
-    <Compile Include="Helpers\SigScan.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

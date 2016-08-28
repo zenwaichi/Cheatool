@@ -16,7 +16,7 @@ namespace Cheatool.Memory
         public BoyerMoore(IntPtr processHandle)
         {
             _processHandle = processHandle;
-        }        
+        }
 
         private void MemInfo(bool writable)
         {
@@ -87,15 +87,10 @@ namespace Cheatool.Memory
                                 || (byte)Convert.ToInt32(aob[bytesPos[i]], 16)
                                 != memoryBrick[offSet - bytesPos[0] + bytesPos[i]]) break;
 
-                            Console.WriteLine($"Pattern: {Convert.ToInt32(aob[bytesPos[i]], 16).ToString("x2")} | Brick: {memoryBrick[offSet + bytesPos[i]].ToString("x2")} | BytePosition: {bytesPos[i]} | ByteCount: {bytesPos.Count}");
-
                             if (i == bytesPos.Count - 1)
-                            {
                                 if (aob[0] == "??")
                                     addresses.Add(new IntPtr((int)baseAddress + (offSet - bytesPos[0])));
                                 else addresses.Add(new IntPtr((int)baseAddress + offSet));
-                                break;
-                            }
                         }
                     else
                         addresses.Add(new IntPtr((int)baseAddress + (offSet - bytesPos[0])));

@@ -52,17 +52,19 @@ namespace Cheatool.Memory
             int offSet = 0;
             while ((offSet = Array.IndexOf(memoryBrick, pattern[0], offSet)) != -1)
             {
-                for (int i = 1; i < pattern.Length; i++)
-                {
-                    if (memoryBrick.Length <= offSet + pattern.Length
-                        || pattern[i] != memoryBrick[offSet + i]) break;
-
-                    if (i == pattern.Length - 1)
+                if (pattern.Length > 1)
+                    for (int i = 1; i < pattern.Length; i++)
                     {
-                        addresses.Add(new IntPtr((int)baseAddress + offSet));
-                        break;
+                        if (memoryBrick.Length <= offSet + pattern.Length
+                            || pattern[i] != memoryBrick[offSet + i]) break;
+
+                        if (i == pattern.Length - 1)
+                        {
+                            addresses.Add(new IntPtr((int)baseAddress + offSet));
+                            break;
+                        }
                     }
-                }
+                else addresses.Add(new IntPtr((int)baseAddress + offSet));
                 offSet++;
             }
         }

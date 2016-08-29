@@ -57,10 +57,7 @@ namespace Cheatool.Memory
                             || pattern[i] != memoryBrick[offSet + i]) break;
 
                         if (i == pattern.Length - 1)
-                        {
                             addresses.Add(new IntPtr((int)baseAddress + offSet));
-                            break;
-                        }
                     }
                 else addresses.Add(new IntPtr((int)baseAddress + offSet));
                 offSet++;

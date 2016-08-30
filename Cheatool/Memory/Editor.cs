@@ -15,11 +15,18 @@ namespace Cheatool.Memory
             _processHandle = processHandle;
         }
 
+        bool CanWrite(IntPtr address, byte[] buff)
+        {
+            uint old, write = 0;
+
+            return (!VirtualProtectEx(_processHandle, address, (uint)buff.Length, (uint)Protection.PEReadWrite, 
+                out old) || !WriteProcessMemory(_processHandle, address, buff, (uint)buff.Length, ref write) ||
+                write != buff.Length);
+        }
+
         public void AoByte(IntPtr address, byte[] buff)
         {
-            uint write = 0;
-            if (!WriteProcessMemory(_processHandle, address, buff, (uint)buff.Length, ref write) ||
-                write != buff.Length)
+            if (CanWrite(address, buff))
                 throw new AccessViolationException("We couldn't write in this memory address");
         }
 
@@ -35,7 +42,7 @@ namespace Cheatool.Memory
             AoByte(address, buff);
         }
 
-        public void Ushort(IntPtr address, ushort replacement)
+        public void UShort(IntPtr address, ushort replacement)
         {
             byte[] buff = BitConverter.GetBytes(replacement);
             AoByte(address, buff);

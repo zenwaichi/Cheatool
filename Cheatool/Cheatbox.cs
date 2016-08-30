@@ -17,7 +17,7 @@ namespace Cheatool
 
         public Cheatbox(Process process)
         {
-            _processHandle = OpenProcess(ProcessAccess.AllAccess, true, (uint)process.Id);
+            _processHandle = OpenProcess((uint)Access.AllAccess, false, (uint)process.Id);
 
             Inspect = new Inspector(_processHandle);
             BoyerScan = new BoyerMoore(_processHandle);
@@ -29,7 +29,7 @@ namespace Cheatool
             Process[] processList = Process.GetProcessesByName(processName);
             Process p = processList.OrderByDescending(process => process.PrivateMemorySize64).First();
             
-            _processHandle = OpenProcess(ProcessAccess.AllAccess, true, (uint)p.Id);
+            _processHandle = OpenProcess((uint)Access.AllAccess, false, (uint)p.Id);
 
             Inspect = new Inspector(_processHandle);
             BoyerScan = new BoyerMoore(_processHandle);

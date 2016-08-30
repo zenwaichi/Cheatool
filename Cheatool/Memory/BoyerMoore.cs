@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 using Cheatool.Memory.Imports;
+using System.Threading;
 
 namespace Cheatool.Memory
 {
@@ -30,7 +31,7 @@ namespace Cheatool.Memory
 
                 if (MemDump == 0) break;
 
-                if (!unwritable && (memInfo.State & 0x1000) != 0 && (memInfo.Protect & 0xCC) != 0)
+                if (unwritable && (memInfo.State & 0x1000) != 0 && (memInfo.Protect & 0xCC) != 0)
                     MemoryRegion.Add(memInfo);
                 else if ((memInfo.State & 0x1000) != 0)
                     MemoryRegion.Add(memInfo);
@@ -92,93 +93,96 @@ namespace Cheatool.Memory
                     addresses.Add(new IntPtr((int)baseAddress + i));
         }
 
-        public async Task<IntPtr[]> AoByte(string pattern, bool unwritable = false)
+        public CancellationTokenSource cancelToken { get; set; } = new CancellationTokenSource();
+
+        public Task<IntPtr[]> AoByte(string pattern, bool unwritable = false)
         {
             if (!pattern.Contains("?"))
             {
                 byte[] buff = pattern.Split(' ').Select(by =>
                 (byte)Convert.ToInt32(by, 16)).ToArray();
-                return await Task.Run(() => { return GeneralScan(buff, unwritable); });
+
+                return Task.Run(() => { return GeneralScan(buff, unwritable); }, cancelToken.Token);
             }
-            else return await Task.Run(() => { return WCScan(pattern, unwritable); });
+            else return Task.Run(() => { return WCScan(pattern, unwritable); }, cancelToken.Token);
         }
 
-        public async Task<IntPtr[]> Text(string value, bool unwritable = false)
+        public Task<IntPtr[]> Text(string value, bool unwritable = false)
         {
             byte[] buff = Encoding.UTF8.GetBytes(value);
 
-            return await Task.Run(() => { return GeneralScan(buff, unwritable); });
+            return Task.Run(() => { return GeneralScan(buff, unwritable); }, cancelToken.Token);
         }
 
-        public async Task<IntPtr[]> Boolean(bool value, bool unwritable = false)
+        public Task<IntPtr[]> Boolean(bool value, bool unwritable = false)
         {
             byte[] buff = BitConverter.GetBytes(value);
 
-            return await Task.Run(() => { return GeneralScan(buff, unwritable); });
+            return Task.Run(() => { return GeneralScan(buff, unwritable); }, cancelToken.Token);
         }
 
-        public async Task<IntPtr[]> UShort(ushort value, bool unwritable = false)
+        public Task<IntPtr[]> UShort(ushort value, bool unwritable = false)
         {
             byte[] buff = BitConverter.GetBytes(value);
 
-            return await Task.Run(() => { return GeneralScan(buff, unwritable); });
+            return Task.Run(() => { return GeneralScan(buff, unwritable); }, cancelToken.Token);
         }
 
-        public async Task<IntPtr[]> Short(short value, bool unwritable = false)
+        public Task<IntPtr[]> Short(short value, bool unwritable = false)
         {
             byte[] buff = BitConverter.GetBytes(value);
 
-            return await Task.Run(() => { return GeneralScan(buff, unwritable); });
+            return Task.Run(() => { return GeneralScan(buff, unwritable); }, cancelToken.Token);
         }
 
-        public async Task<IntPtr[]> UInteger(uint value, bool unwritable = false)
+        public Task<IntPtr[]> UInteger(uint value, bool unwritable = false)
         {
             byte[] buff = BitConverter.GetBytes(value);
 
-            return await Task.Run(() => { return GeneralScan(buff, unwritable); });
+            return Task.Run(() => { return GeneralScan(buff, unwritable); }, cancelToken.Token);
         }
 
-        public async Task<IntPtr[]> Integer(int value, bool unwritable = false)
+        public Task<IntPtr[]> Integer(int value, bool unwritable = false)
         {
             byte[] buff = BitConverter.GetBytes(value);
 
-            return await Task.Run(() => { return GeneralScan(buff, unwritable); });
+            return Task.Run(() => { return GeneralScan(buff, unwritable); }, cancelToken.Token);
         }
 
-        public async Task<IntPtr[]> ULong(ulong value, bool unwritable = false)
+        public Task<IntPtr[]> ULong(ulong value, bool unwritable = false)
         {
             byte[] buff = BitConverter.GetBytes(value);
 
-            return await Task.Run(() => { return GeneralScan(buff, unwritable); });
+            return Task.Run(() => { return GeneralScan(buff, unwritable); }, cancelToken.Token);
         }
 
-        public async Task<IntPtr[]> Long(long value, bool unwritable = false)
+        public Task<IntPtr[]> Long(long value, bool unwritable = false)
         {
             byte[] buff = BitConverter.GetBytes(value);
 
-            return await Task.Run(() => { return GeneralScan(buff, unwritable); });
+            return Task.Run(() => { return GeneralScan(buff, unwritable); }, cancelToken.Token);
         }
 
-        public async Task<IntPtr[]> Double(double value, bool unwritable = false)
+        public Task<IntPtr[]> Double(double value, bool unwritable = false)
         {
             byte[] buff = BitConverter.GetBytes(value);
 
-            return await Task.Run(() => { return GeneralScan(buff, unwritable); });
+            return Task.Run(() => { return GeneralScan(buff, unwritable); }, cancelToken.Token);
         }
 
-        public async Task<IntPtr[]> Float(float value, bool unwritable = false)
+        public Task<IntPtr[]> Float(float value, bool unwritable = false)
         {
             byte[] buff = BitConverter.GetBytes(value);
 
-            return await Task.Run(() => { return GeneralScan(buff, unwritable); });
+            return Task.Run(() => { return GeneralScan(buff, unwritable); }, cancelToken.Token);
         }
 
-        public async Task<IntPtr[]> Decimal(decimal value, bool unwritable = false)
+        public Task<IntPtr[]> Decimal(decimal value, bool unwritable = false)
         {
             byte[] buff = decimal.GetBits(value).SelectMany(x =>
             BitConverter.GetBytes(x)).ToArray();
 
-            return await Task.Run(() => { return GeneralScan(buff, unwritable); });
+            return Task.Run(() => { return GeneralScan(buff, unwritable); }, cancelToken.Token);
         }
 
         private IntPtr[] GeneralScan(byte[] buff, bool unwritable)
@@ -196,7 +200,7 @@ namespace Cheatool.Memory
                     MemoryRegion[i].RegionSize, ref read);
 
                 BoyerAlgo(MemoryRegion[i].BaseAddress, wholeMemory, buff, ref addresses);
-            }
+            }            
             return addresses.ToArray();
         }
 

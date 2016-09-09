@@ -31,10 +31,13 @@ namespace Cheatool.Memory
 
                 if (MemDump == 0) break;
 
-                if (unwritable && (memInfo.State & 0x1000) != 0 && (memInfo.Protect & 0xCC) != 0)
-                    MemoryRegion.Add(memInfo);
-                else if ((memInfo.State & 0x1000) != 0)
-                    MemoryRegion.Add(memInfo);
+                if((memInfo.State & 0x1000) != 0)
+                {
+                    if (unwritable && (memInfo.Protect & 0xCC) != 0)
+                        MemoryRegion.Add(memInfo);
+                    else
+                        MemoryRegion.Add(memInfo);
+                }
 
                 Addy = new IntPtr(memInfo.BaseAddress.ToInt32() + (int)memInfo.RegionSize);
             }
